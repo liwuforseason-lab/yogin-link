@@ -44,12 +44,11 @@
 
     if (haystack.indexOf(q) !== -1) return true;
 
-    // 숫자만 입력한 경우: 2 → 002, 001, 12 → 012
+    // 숫자만 입력한 경우: 2 → 002, 1 → 001
     var qd = digitsOf(rawQuery);
     if (qd && /^\d+$/.test(q)) {
       var pd = digitsOf(product.no);
       if (pd && parseInt(pd, 10) === parseInt(qd, 10)) return true;
-      if (haystack.indexOf(qd) !== -1) return true;
     }
     return false;
   }
