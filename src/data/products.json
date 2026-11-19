@@ -1,0 +1,38 @@
+{
+  "shop": {
+    "name": "요긴상회",
+    "handle": "@zipora_find",
+    "tagline": "생활꿀템 번호 검색",
+    "updated": "2026-11-19"
+  },
+  "products": [
+    {
+      "no": "001",
+      "title": "듀플렉스 무자계 열선 전기요",
+      "short": "전기요",
+      "point": "무자계 열선에 과열방지·타이머까지, 72% 할인 중",
+      "price": 52600,
+      "originalPrice": 192000,
+      "discount": 72,
+      "badge": "겨울 필수템",
+      "keywords": ["전기요", "전기매트", "전기장판", "듀플렉스", "겨울", "난방", "온수매트"],
+      "image": "assets/img/duplex-electric-blanket.jpg",
+      "link": "https://link.coupang.com/a/iLZltCexeS",
+      "note": "정가 192,000원 → 52,600원 · 무료배송 · 상품평 1,991개"
+    },
+    {
+      "no": "002",
+      "title": "세타필 모이스춰라이징 크림 550g",
+      "short": "세타필 크림",
+      "point": "소비자원 8종 비교에서 g당 66원 최저가·만족도 1등",
+      "price": 17050,
+      "originalPrice": 30600,
+      "discount": 44,
+      "badge": "소비자원 1등",
+      "keywords": ["세타필", "보습크림", "크림", "모이스춰라이징", "건성", "바디크림", "한국소비자원", "보습"],
+      "image": "assets/img/cetaphil-550g.jpg",
+      "link": "https://link.coupang.com/a/iNKWmuJFym",
+      "note": "정가 30,600원 → 17,050원 (100g당 3,100원) · 로켓배송 · 상품평 82,621개"
+    }
+  ]
+}
