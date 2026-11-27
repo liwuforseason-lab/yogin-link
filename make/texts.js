@@ -183,7 +183,7 @@ window.YG = window.YG || {};
     L.push("");
     L.push("장점");
     if (d.discount) {
-      L.push("· 정가 " + won(d.originalPrice) + "에서 " + won(d.saved) + " 아낀 금액 (" + d.discount + "% 할인)");
+      L.push("· " + won(d.originalPrice) + " → " + won(d.price) + ", " + won(d.saved) + " 아낌 (" + d.discount + "%)");
     } else {
       L.push("· " + won(d.price) + " 가격");
     }
@@ -197,7 +197,7 @@ window.YG = window.YG || {};
     // 5. 정리
     L.push("5. 정리");
     L.push("");
-    L.push(won(d.price) + "이면 " + eul(d.kw1) + " 필요했던 분들은 한 번 계산해 보실 만해요.");
+    L.push(i(d.kw1) + " 필요했던 분들은 " + won(d.price) + "이면 한 번 계산해 보실 만해요.");
     L.push("가격은 다시 오를 수 있으니 링크에서 최종 금액 확인하고 결정하세요.");
     L.push("궁금한 점은 댓글로 남겨 주세요.");
     L.push("");

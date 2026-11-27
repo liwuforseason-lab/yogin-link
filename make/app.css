@@ -398,7 +398,7 @@ body {
   color: #4a3a33;
 }
 .readout + .readout { margin-top: 10px; }
-.readout--body { max-height: 420px; overflow-y: auto; }
+.readout--body { max-height: none; }
 .readout--code {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 11.5px;

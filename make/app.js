@@ -146,7 +146,7 @@
     var p = num($("#fPrice").value);
     var el = $("#calcLine");
     if (o > 0 && p > 0 && o > p) {
-      var d = Math.round((1 - p / o) * 100);
+      var d = Math.floor((1 - p / o) * 100);
       el.innerHTML = "<b>" + d + "%</b> 할인 · " + won(o - p) + " 절약 (" + won(p) + ")";
       el.classList.add("is-on");
     } else if (p > 0) {
@@ -223,7 +223,7 @@
     var price = num($("#fPrice").value);
     if (!price) { toast("할인가를 넣어 주세요"); $("#fPrice").focus(); return null; }
     var orig = num($("#fOrig").value);
-    var discount = orig > price ? Math.round((1 - price / orig) * 100) : 0;
+    var discount = orig > price ? Math.floor((1 - price / orig) * 100) : 0;
     var saved = orig > price ? orig - price : 0;
 
     var userKeywords = parseKeywords($("#fKeywords").value);
