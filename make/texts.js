@@ -42,6 +42,11 @@ window.YG = window.YG || {};
   }
   function eul(word) { return word + josa(word, "을", "를"); }
   function i(word) { return word + josa(word, "이", "가"); }
+  function sentence(s) {
+    var t = String(s || "").trim();
+    if (!t) return "";
+    return /[.!?~]$/.test(t) ? t : t + ".";
+  }
 
   var EMOJI = [
     ["전기요|전기매트|전기장판|온수매트|담요|이불", "🧣"],
@@ -110,19 +115,16 @@ window.YG = window.YG || {};
         [
           kw + " 가격 알아보고 있었는데 " + d.discount + "% 할인 중이라 그냥 지나칠 수가 없었어요.",
           "정가 " + won(d.originalPrice) + "이 " + won(d.price) + "이에요. " + won(d.saved) + "이 빠진 금액이에요.",
-          d.point,
           "가격은 수시로 바뀌니까 결제 전에 링크에서 한 번 더 확인해 주세요."
         ],
         [
           "요즘 " + kw + " 찾는 분들이 많아서 가격부터 정리해 봤어요.",
           d.title + ", 지금 " + d.discount + "% 할인해서 " + won(d.price) + "이에요.",
-          d.point,
           "정가로 사면 " + won(d.saved) + "을 더 내는 셈이라, 필요했던 분들은 이번에 보시면 좋겠어요."
         ],
         [
           kw + " 하나 장만할까 고민하던 차에 " + d.discount + "% 특가가 떠서 정리해 봐요.",
           won(d.originalPrice) + "짜리가 " + won(d.price) + "이에요.",
-          d.point,
           "아래에 가격이랑 사기 전에 볼 점 같이 적어 뒀어요."
         ]
       ];
@@ -130,9 +132,8 @@ window.YG = window.YG || {};
       sets = [
         [
           kw + " 가격 알아보다가 " + won(d.price) + "인 걸 보고 정리해 봤어요.",
-          d.point,
-          "가격은 수시로 바뀌니까 결제 전에 링크에서 확인하는 게 안전해요.",
-          "필요했던 분들은 아래 내용 보고 판단하시면 돼요."
+          "필요했던 분들은 아래 내용 보고 판단하시면 돼요.",
+          "가격은 수시로 바뀌니까 결제 전에 링크에서 확인하는 게 안전해요."
         ]
       ];
     }
@@ -162,7 +163,7 @@ window.YG = window.YG || {};
     L.push("2. 어떤 상품인지");
     L.push("");
     L.push(d.title + josa(d.title, "이에요", "예요") + ".");
-    if (d.point) L.push(d.point + ".");
+    if (d.point) L.push(sentence(d.point));
     var kws = (d.keywords || []).slice(0, 3);
     if (kws.length >= 2) {
       L.push(kws[1] + "·" + (kws[2] || kws[1]) + " 쪽으로 같이 찾아보시는 분들이 비교하기 좋은 구성이에요.");
@@ -177,22 +178,21 @@ window.YG = window.YG || {};
     if (kws[1]) L.push("· " + kws[1] + "까지 같이 챙기려는 분");
     L.push("");
 
-    // 4. 체크포인트
-    L.push("4. 사기 전에 체크할 점");
+    // 4. 장단점
+    L.push("4. 장단점");
     L.push("");
+    L.push("장점");
     if (d.discount) {
-      L.push("· " + d.discount + "% 할인은 확인한 시점 가격이라, 결제 화면에서 금액을 한 번 더 봐 주세요.");
+      L.push("· 정가 " + won(d.originalPrice) + "에서 " + won(d.saved) + " 아낀 금액 (" + d.discount + "% 할인)");
     } else {
-      L.push("· 표시 가격은 확인한 시점 기준이라, 결제 화면에서 한 번 더 봐 주세요.");
+      L.push("· " + won(d.price) + " 가격");
     }
-    L.push("· 색상·사이즈·수량 옵션에 따라 가격이 달라질 수 있어요.");
-    L.push("· 최근 리뷰에서 배송 지연이나 파손 얘기가 있는지 보세요.");
-    if (/로켓/.test(d.note || "")) L.push("· 로켓배송이면 도착 예정일도 함께 확인해 두면 좋아요.");
+    if (d.note) L.push("· " + d.note);
+    L.push("아쉬운 점");
+    L.push("· 확인한 시점 가격이라, 결제 화면에서 금액이 달라질 수 있어요.");
+    L.push("· 색상·사이즈·수량 옵션에 따라 가격이 다를 수 있어요.");
+    L.push("· 최근 리뷰에 배송 지연이나 파손 얘기가 있는지 한 번 보세요.");
     L.push("");
-    if (!/로켓/.test(d.note || "")) {
-      L.push("장점은 " + (d.discount ? d.discount + "% 할인 폭" : "가격") + "이고, 아쉬운 점은 옵션별 가격 차이예요.");
-      L.push("");
-    }
 
     // 5. 정리
     L.push("5. 정리");

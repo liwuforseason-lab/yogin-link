@@ -39,37 +39,53 @@ window.YG = window.YG || {};
     ctx.closePath();
   }
 
-  /* 글자를 폭에 맞춰 줄바꿈. maxLines 넘으면 말줄임. */
+  /* 글자를 폭에 맞춰 줄바꿈. 공백 단위로 먼저 끊고, maxLines 넘으면 말줄임. */
   function wrap(ctx, text, maxWidth, maxLines) {
-    var chars = String(text || "").split("");
+    var words = String(text || "").replace(/\n/g, " ").split(/\s+/).filter(Boolean);
     var lines = [];
-    var line = "";
-    for (var i = 0; i < chars.length; i++) {
-      var ch = chars[i];
-      if (ch === "\n") {
-        lines.push(line);
-        line = "";
-        if (lines.length >= maxLines) break;
+    var cur = "";
+    var i = 0;
+    var overflow = false;
+
+    while (i < words.length) {
+      var w = words[i];
+      var cand = cur ? cur + " " + w : w;
+      if (ctx.measureText(cand).width <= maxWidth) {
+        cur = cand;
+        i += 1;
         continue;
       }
-      var test = line + ch;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        lines.push(line);
-        line = ch;
-        if (lines.length >= maxLines) break;
-      } else {
-        line = test;
+      if (cur) {
+        lines.push(cur);
+        cur = "";
+        if (lines.length >= maxLines) { overflow = true; break; }
+        continue;
       }
+      // 한 단어가 한 줄보다 길면 글자 단위로 끊기
+      var chars = w.split("");
+      var part = "";
+      for (var k = 0; k < chars.length; k++) {
+        if (ctx.measureText(part + chars[k]).width > maxWidth && part) {
+          lines.push(part);
+          part = chars[k];
+          if (lines.length >= maxLines) { overflow = true; break; }
+        } else {
+          part += chars[k];
+        }
+      }
+      if (overflow) break;
+      cur = part;
+      i += 1;
     }
-    if (lines.length < maxLines && line) lines.push(line);
+    if (!overflow && cur) lines.push(cur);
+    if (i < words.length) overflow = true;
 
-    var full = String(text || "").replace(/\n/g, " ");
-    if (lines.length === maxLines && lines.join("").length < full.length) {
-      var last = lines[maxLines - 1];
+    if (overflow && lines.length) {
+      var last = lines[lines.length - 1];
       while (last.length > 1 && ctx.measureText(last + "…").width > maxWidth) {
         last = last.slice(0, -1);
       }
-      lines[maxLines - 1] = last.replace(/\s+$/, "") + "…";
+      lines[lines.length - 1] = last.replace(/\s+$/, "") + "…";
     }
     return lines;
   }
@@ -81,6 +97,7 @@ window.YG = window.YG || {};
     var padX = opts.padX || 22;
     var h = opts.h || 52;
     var w = tw + padX * 2;
+    if (opts.measure) return w;
     roundRect(ctx, x, y, w, h, h / 2);
     ctx.fillStyle = opts.bg || C.ink;
     ctx.fill();
@@ -224,12 +241,12 @@ window.YG = window.YG || {};
     /* 한 줄 특징 */
     if (d.point) {
       ctx.fillStyle = C.soft;
-      ctx.font = font(33, 600);
+      ctx.font = font(32, 600);
       var pLines = wrap(ctx, d.point, imgW, 2);
-      var py = Math.max(y + 12, 962);
+      var py = Math.max(y + 8, 958);
       pLines.forEach(function (ln) {
         ctx.fillText(ln, PAD, py);
-        py += 45;
+        py += 43;
       });
     }
 
@@ -237,35 +254,37 @@ window.YG = window.YG || {};
     ctx.strokeStyle = C.line;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(PAD, 1082);
-    ctx.lineTo(W - PAD, 1082);
+    ctx.moveTo(PAD, 1068);
+    ctx.lineTo(W - PAD, 1068);
     ctx.stroke();
 
     if (d.originalPrice && d.discount) {
       ctx.fillStyle = C.faint;
-      ctx.font = font(36, 600);
+      ctx.font = font(34, 600);
       var ow = ctx.measureText(won(d.originalPrice)).width;
-      ctx.fillText(won(d.originalPrice), PAD, 1102);
+      ctx.fillText(won(d.originalPrice), PAD, 1086);
       ctx.strokeStyle = C.faint;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(PAD, 1128);
-      ctx.lineTo(PAD + ow, 1128);
+      ctx.moveTo(PAD, 1110);
+      ctx.lineTo(PAD + ow, 1110);
       ctx.stroke();
     }
 
     ctx.fillStyle = C.roseDeep;
-    ctx.font = font(82, 800);
-    ctx.fillText(won(d.price), PAD, 1146);
+    ctx.font = font(74, 800);
+    ctx.fillText(won(d.price), PAD, 1122);
+    var priceW = ctx.measureText(won(d.price)).width;
 
     if (d.badge) {
-      pill(ctx, W - PAD - 30 - 210, 1150, d.badge, { bg: "#fff1ee", color: C.roseDeep, size: 26, h: 54 });
+      var bw = pill(ctx, 0, 0, d.badge, { bg: "#fff1ee", color: C.roseDeep, size: 25, h: 50, padX: 20, measure: true });
+      pill(ctx, W - PAD - bw, 1128, d.badge, { bg: "#fff1ee", color: C.roseDeep, size: 25, h: 50, padX: 20 });
     }
 
     /* 하단 */
     ctx.fillStyle = C.ink;
     ctx.font = font(26, 800);
-    var footY = 1252;
+    var footY = 1236;
     var label = d.no ? "번호 " + d.no + " 로 검색" : "번호로 검색";
     ctx.fillText(label, PAD, footY);
     var lw = ctx.measureText(label).width;
@@ -278,7 +297,7 @@ window.YG = window.YG || {};
     ctx.font = font(17, 500);
     var disc = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.";
     wrap(ctx, disc, imgW, 2).forEach(function (ln, i) {
-      ctx.fillText(ln, PAD, 1294 + i * 24);
+      ctx.fillText(ln, PAD, 1290 + i * 23);
     });
   }
 
