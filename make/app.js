@@ -366,6 +366,15 @@
       }, 60);
       toast("4채널 초안 만들었어요");
     }
+    updateBar();
+  }
+
+  /* 입력 카드를 지나서 내려가면 하단 바를 숨깁니다 (결과 가리지 않게) */
+  function updateBar() {
+    var form = $("#formCard");
+    if (!form) return;
+    var hide = form.getBoundingClientRect().bottom < 80;
+    $("#actionbar").classList.toggle("is-hidden", hide);
   }
 
   /* ---------------- 이력 ---------------- */
@@ -803,6 +812,8 @@
     updateCalc();
     loadProducts();
     setupPwa();
+    window.addEventListener("scroll", updateBar, { passive: true });
+    updateBar();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
