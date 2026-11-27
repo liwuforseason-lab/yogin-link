@@ -49,8 +49,13 @@ async function proxyImage(res, target) {
     }
   });
   if (!r.ok) return json(res, r.status, { ok: false, error: 'image_fetch_failed', status: r.status });
-  const type = r.headers.get('content-type') || 'image/jpeg';
-  if (!/^image\//.test(type)) return json(res, 400, { ok: false, error: 'not_an_image' });
+  let type = r.headers.get('content-type') || '';
+  if (!/^image\//.test(type)) {
+    const ext = (url.pathname.split('.').pop() || '').toLowerCase();
+    const byExt = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' };
+    if (!byExt[ext]) return json(res, 400, { ok: false, error: 'not_an_image', contentType: type });
+    type = byExt[ext];
+  }
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > IMG_MAX_BYTES) return json(res, 413, { ok: false, error: 'image_too_large' });
   res.statusCode = 200;
