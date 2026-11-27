@@ -166,7 +166,7 @@ window.YG = window.YG || {};
     if (d.point) L.push(sentence(d.point));
     var kws = (d.keywords || []).slice(0, 3);
     if (kws.length >= 2) {
-      L.push(kws[1] + "·" + (kws[2] || kws[1]) + " 쪽으로 같이 찾아보시는 분들이 비교하기 좋은 구성이에요.");
+      L.push("가격 비교하실 때 " + kws[0] + " 말고 " + kws[1] + (kws[2] ? ", " + kws[2] : "") + " 쪽으로도 같이 검색해 보세요.");
     }
     L.push("");
 
