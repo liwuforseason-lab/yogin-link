@@ -506,6 +506,10 @@
       return r.json().catch(function () { return {}; }).then(function (data) {
         if (!r.ok) {
           var msg = (data && data.message) || ("HTTP " + r.status);
+          if (r.status === 401) msg = "토큰이 올바르지 않아요. 다시 저장해 주세요 (401)";
+          else if (r.status === 403) msg = "권한이 부족해요. Contents: Read and write 권한을 확인해 주세요 (403)";
+          else if (r.status === 404) msg = "저장소를 못 찾았어요. 토큰의 Repository access에 yogin-link가 들어있는지 확인해 주세요 (404)";
+          else if (r.status === 409 || r.status === 422) msg = "방금 다른 곳에서 바뀌었어요. 잠시 뒤 다시 눌러 주세요 (" + r.status + ")";
           var err = new Error(msg);
           err.status = r.status;
           throw err;
