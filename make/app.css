@@ -777,7 +777,7 @@ body {
   display: grid;
   place-items: center;
 }
-.pitem__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pitem__thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
 .pitem__noimg {
   font-size: 26px;
   font-weight: 800;
