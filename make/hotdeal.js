@@ -219,7 +219,7 @@ window.YG = window.YG || {};
       });
     };
 
-    var first = force ? fromLive().catch(fromJson) : fromJson().catch(fromLive);
+    var first = fromLive().catch(fromJson);
 
     first.then(function (data) {
       var items = (data && data.items) || [];
