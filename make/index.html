@@ -16,7 +16,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<link rel="stylesheet" href="app.css?v=9" />
+<link rel="stylesheet" href="app.css?v=10" />
 </head>
 <body>
   <div class="app">
@@ -41,6 +41,35 @@
     </div>
 
     <main>
+
+      <section class="card find" id="findCard">
+        <div class="card__head">
+          <h2>🔍 핫딜 자동 찾기</h2>
+          <button type="button" class="tiny-btn" id="keysBtn">API 키</button>
+        </div>
+
+        <p class="find-state" id="findState">파트너스 API 키를 넣으면 실시간 상품이 떠요</p>
+
+        <div class="findtabs" role="tablist" aria-label="상품 소스">
+          <button type="button" class="ftab is-on" role="tab" data-src="goldbox">오늘의 골드박스</button>
+          <button type="button" class="ftab" role="tab" data-src="best">인기 카테고리</button>
+          <button type="button" class="ftab" role="tab" data-src="search">키워드 검색</button>
+        </div>
+
+        <div class="findbar" id="findCatRow" hidden>
+          <label class="findbar__label" for="findCat">카테고리</label>
+          <select id="findCat" class="input input--select"></select>
+        </div>
+
+        <div class="findbar" id="findSearchRow" hidden>
+          <input id="findKeyword" class="input" type="search" placeholder="예) 전기요, 화장지, 캡슐커피" autocomplete="off" enterkeyhint="search" />
+          <button type="button" class="mini-btn" id="findGo">찾기</button>
+        </div>
+
+        <div class="findlist" id="findList">
+          <div class="find-empty">불러오는 중…</div>
+        </div>
+      </section>
 
       <section class="card" id="formCard">
         <div class="card__head">
@@ -230,10 +259,49 @@
     </div>
   </div>
 
+  <div class="sheet" id="apiSheet" hidden>
+    <div class="sheet__backdrop" data-close="1"></div>
+    <div class="sheet__panel">
+      <div class="sheet__grab"></div>
+      <div class="sheet__head">
+        <h2>쿠팡 파트너스 API 키</h2>
+        <button type="button" class="tiny-btn" id="apiClose">닫기</button>
+      </div>
+
+      <div class="keys">
+        <p class="keys__lead">
+          <b>partners.coupang.com → 추가 기능 → 파트너스 API</b>에서 만든 Access Key·Secret Key를 넣어 주세요.
+        </p>
+        <div class="field field--sm">
+          <label for="cpAccess">Access Key</label>
+          <input id="cpAccess" class="input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="field field--sm">
+          <label for="cpSecret">Secret Key</label>
+          <input id="cpSecret" class="input" type="password" placeholder="Secret Key" autocomplete="off" spellcheck="false" />
+        </div>
+        <details class="keys__adv">
+          <summary>프록시 주소 (바꿀 때만)</summary>
+          <input id="cpApi" class="input" type="url" placeholder="https://yogin-link.vercel.app/api/coupang" autocomplete="off" />
+          <p class="hint">키를 대신 서명해 주는 서버예요. 기본값 그대로 두면 됩니다.</p>
+        </details>
+        <div class="keys__row">
+          <button type="button" class="wide-btn" id="cpSave">저장</button>
+          <button type="button" class="tiny-btn" id="cpTest">연결 테스트</button>
+          <button type="button" class="tiny-btn" id="cpClear">지우기</button>
+        </div>
+        <p class="keys__note" id="cpNote"></p>
+        <p class="hint">키는 이 폰 브라우저에만 저장돼요. 사이트에는 올라가지 않고, 상품을 찾을 때 서명용으로만 쓰여요.</p>
+        <button type="button" class="mini-btn mini-btn--plain" id="cpSample">키 없이 샘플 화면 먼저 보기</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
-  <script src="texts.js?v=9"></script>
-  <script src="card.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="texts.js?v=10"></script>
+  <script src="card.js?v=10"></script>
+  <script src="app.js?v=10"></script>
+  <script src="hotdeal.js?v=10"></script>
 </body>
 </html>
