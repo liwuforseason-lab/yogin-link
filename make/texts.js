@@ -175,7 +175,7 @@ window.YG = window.YG || {};
     L.push("");
     L.push("· " + eul(d.kw1) + " 처음 장만하는 분");
     L.push("· 쓰던 걸 바꿀 때가 된 분");
-    if (kws[1]) L.push("· " + kws[1] + "까지 같이 챙기려는 분");
+    L.push("· 여러 개를 한 번에 사두려는 분");
     L.push("");
 
     // 4. 장단점

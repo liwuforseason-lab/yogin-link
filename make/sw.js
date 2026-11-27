@@ -1,13 +1,13 @@
 /* 요긴상회 · 핫딜 스튜디오 서비스워커
    앱 껍데기는 캐시해서 오프라인에서도 열리고, 상품 번호는 항상 새로 받아옵니다. */
-var CACHE = "yg-studio-v7";
+var CACHE = "yg-studio-v8";
 var SHELL = [
   "./",
   "./index.html",
-  "./app.css?v=6",
-  "./texts.js?v=6",
-  "./card.js?v=6",
-  "./app.js?v=6",
+  "./app.css?v=7",
+  "./texts.js?v=7",
+  "./card.js?v=7",
+  "./app.js?v=7",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

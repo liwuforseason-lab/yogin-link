@@ -211,8 +211,8 @@ window.YG = window.YG || {};
     /* 할인 배지 */
     if (d.discount) {
       var rad = 92;
-      var cx = panelX + panelW - 24 - rad;
-      var cy = panelY + 22 + rad;
+      var cx = panelX + panelW - 34;
+      var cy = panelY + 34;
       var bg = ctx.createLinearGradient(cx - rad, cy - rad, cx + rad, cy + rad);
       bg.addColorStop(0, "#f39a92");
       bg.addColorStop(1, C.roseDeep);

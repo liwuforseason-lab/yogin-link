@@ -233,6 +233,8 @@
 
     var short = $("#fShort").value.trim() || keywords[0] || title.slice(0, 10);
     var badge = $("#fBadge").value.trim();
+    // 자동으로 넣었던 "72% 특가" 형태는 할인율이 바뀌면 다시 계산
+    if (/^\d+%\s?특가$/.test(badge)) badge = "";
     if (!badge) {
       badge = discount >= 50 ? discount + "% 특가" : (discount ? "오늘의 특가" : "생활꿀템");
     }
