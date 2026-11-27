@@ -150,59 +150,69 @@ window.YG = window.YG || {};
     ctx.font = font(24, 600);
     ctx.fillText("생활꿀템 번호 검색", PAD + 106, 124);
 
-    /* 이미지 패널 */
-    var imgTop = 186;
-    var imgH = 570;
-    var imgW = W - PAD * 2;
+    /* 이미지 패널 — 사진 비율에 맞춰 카드가 따라갑니다 */
+    var contentW = W - PAD * 2;
+    var bandTop = 186;
+    var bandBottom = 762;
+    var maxW = contentW;
+    var maxH = bandBottom - bandTop - 56;
+    var pad = 28;
+    var dw;
+    var dh;
+    if (img && img.width) {
+      var r = Math.min(maxW / img.width, maxH / img.height);
+      dw = img.width * r;
+      dh = img.height * r;
+    } else {
+      dw = 520;
+      dh = 420;
+    }
+    var panelW = dw + pad * 2;
+    var panelH = dh + pad * 2;
+    var panelX = (W - panelW) / 2;
+    var panelY = bandTop + (bandBottom - bandTop - panelH) / 2;
+
     ctx.save();
     ctx.shadowColor = "rgba(180,124,106,0.18)";
     ctx.shadowBlur = 26;
     ctx.shadowOffsetY = 8;
-    roundRect(ctx, PAD, imgTop, imgW, imgH, 44);
+    roundRect(ctx, panelX, panelY, panelW, panelH, 44);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
     ctx.restore();
 
     ctx.save();
-    roundRect(ctx, PAD, imgTop, imgW, imgH, 44);
+    roundRect(ctx, panelX, panelY, panelW, panelH, 44);
     ctx.clip();
     if (img && img.width) {
-      var pad = 26;
-      var bw = imgW - pad * 2;
-      var bh = imgH - pad * 2;
-      var r = Math.min(bw / img.width, bh / img.height);
-      var dw = img.width * r;
-      var dh = img.height * r;
-      ctx.drawImage(img, PAD + (imgW - dw) / 2, imgTop + (imgH - dh) / 2, dw, dh);
+      ctx.drawImage(img, panelX + pad, panelY + pad, dw, dh);
     } else {
-      var ph = ctx.createLinearGradient(PAD, imgTop, PAD + imgW, imgTop + imgH);
+      var ph = ctx.createLinearGradient(panelX, panelY, panelX + panelW, panelY + panelH);
       ph.addColorStop(0, "#fff4ee");
       ph.addColorStop(1, "#f6e3d9");
       ctx.fillStyle = ph;
-      ctx.fillRect(PAD, imgTop, imgW, imgH);
+      ctx.fillRect(panelX, panelY, panelW, panelH);
       ctx.fillStyle = "#c9a294";
       ctx.font = font(120, 700);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("🛍️", PAD + imgW / 2, imgTop + imgH / 2 - 20);
+      ctx.fillText("🛍️", panelX + panelW / 2, panelY + panelH / 2 - 20);
       ctx.font = font(30, 700);
       ctx.fillStyle = "#b08b7d";
-      ctx.fillText("상품 사진을 넣어 주세요", PAD + imgW / 2, imgTop + imgH / 2 + 90);
+      ctx.fillText("상품 사진을 넣어 주세요", panelX + panelW / 2, panelY + panelH / 2 + 90);
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
     }
     ctx.restore();
 
     /* 번호 칩 */
-    if (d.no) pill(ctx, PAD + 28, imgTop + 26, d.no, { bg: C.ink, size: 30, h: 56 });
+    if (d.no) pill(ctx, panelX + 24, panelY + 22, d.no, { bg: C.ink, size: 30, h: 56 });
 
     /* 할인 배지 */
     if (d.discount) {
-      var bx = W - PAD - 30;
-      var by = imgTop + 30;
       var rad = 92;
-      var cx = bx - rad;
-      var cy = by + rad;
+      var cx = panelX + panelW - 24 - rad;
+      var cy = panelY + 22 + rad;
       var bg = ctx.createLinearGradient(cx - rad, cy - rad, cx + rad, cy + rad);
       bg.addColorStop(0, "#f39a92");
       bg.addColorStop(1, C.roseDeep);
@@ -225,13 +235,14 @@ window.YG = window.YG || {};
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
     } else if (d.badge) {
-      pill(ctx, W - PAD - 30 - 200, imgTop + 34, d.badge, { bg: "#ffffff", color: C.roseDeep, size: 26, h: 54 });
+      var bw0 = pill(ctx, 0, 0, d.badge, { bg: "#ffffff", color: C.roseDeep, size: 26, h: 54, measure: true });
+      pill(ctx, panelX + panelW - 24 - bw0, panelY + 26, d.badge, { bg: "#ffffff", color: C.roseDeep, size: 26, h: 54 });
     }
 
     /* 제목 */
     ctx.fillStyle = C.ink;
     ctx.font = font(60, 800);
-    var titleLines = wrap(ctx, d.title, imgW, 2);
+    var titleLines = wrap(ctx, d.title, contentW, 2);
     var y = 800;
     titleLines.forEach(function (ln) {
       ctx.fillText(ln, PAD, y);
@@ -242,7 +253,7 @@ window.YG = window.YG || {};
     if (d.point) {
       ctx.fillStyle = C.soft;
       ctx.font = font(32, 600);
-      var pLines = wrap(ctx, d.point, imgW, 2);
+      var pLines = wrap(ctx, d.point, contentW, 2);
       var py = Math.max(y + 8, 958);
       pLines.forEach(function (ln) {
         ctx.fillText(ln, PAD, py);
@@ -296,7 +307,7 @@ window.YG = window.YG || {};
     ctx.fillStyle = C.faint;
     ctx.font = font(17, 500);
     var disc = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.";
-    wrap(ctx, disc, imgW, 2).forEach(function (ln, i) {
+    wrap(ctx, disc, contentW, 2).forEach(function (ln, i) {
       ctx.fillText(ln, PAD, 1290 + i * 23);
     });
   }
