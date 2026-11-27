@@ -372,9 +372,11 @@
   /* 입력 카드를 지나서 내려가면 하단 바를 숨깁니다 (결과 가리지 않게) */
   function updateBar() {
     var form = $("#formCard");
+    var res = $("#result");
     if (!form) return;
-    var hide = form.getBoundingClientRect().bottom < 80;
-    $("#actionbar").classList.toggle("is-hidden", hide);
+    var pastForm = form.getBoundingClientRect().bottom < 80;
+    var inResults = !res.hidden && res.getBoundingClientRect().top < window.innerHeight * 0.72;
+    $("#actionbar").classList.toggle("is-hidden", pastForm || inResults);
   }
 
   /* ---------------- 이력 ---------------- */
