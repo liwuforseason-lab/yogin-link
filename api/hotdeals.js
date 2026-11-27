@@ -10,6 +10,7 @@ const sources = require('../lib/hotdeal-sources.js');
 const IMG_HOSTS = [
   'coupangcdn.com',
   'coupang.com',
+  'etoland.co.kr',
   'clien.net',
   'ppomppu.co.kr',
   'telesco.pe'
@@ -45,7 +46,7 @@ async function proxyImage(res, target) {
   const r = await fetch(url.toString(), {
     headers: {
       'User-Agent': 'Mozilla/5.0 (compatible; YoginStudio/1.0)',
-      Referer: host.endsWith('clien.net') ? 'https://www.clien.net/' : 'https://www.coupang.com/'
+      Referer: host.endsWith('clien.net') ? 'https://www.clien.net/' : (host.endsWith('etoland.co.kr') ? 'https://www.etoland.co.kr/' : 'https://www.coupang.com/')
     }
   });
   if (!r.ok) return json(res, r.status, { ok: false, error: 'image_fetch_failed', status: r.status });

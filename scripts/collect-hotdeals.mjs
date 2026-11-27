@@ -32,7 +32,7 @@ const payload = {
   shop: {
     name: '요긴상회',
     updated: new Date().toISOString().slice(0, 10),
-    note: '공개 핫딜 게시판(클리앙 알뜰구매·뽐뿌)에서 쿠팡 상품만 모은 목록입니다. 다른 사람의 제휴 링크는 버리고 상품 주소만 남깁니다.'
+    note: '공개 핫딜 게시판(이토랜드·클리앙 알뜰구매·뽐뿌)에서 쿠팡 상품만 모은 목록입니다. 다른 사람의 제휴 링크는 버리고 상품 주소만 남깁니다.'
   },
   updatedAt: new Date().toISOString(),
   count: items.length,
