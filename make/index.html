@@ -16,7 +16,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<link rel="stylesheet" href="app.css?v=10" />
+<link rel="stylesheet" href="app.css?v=11" />
 </head>
 <body>
   <div class="app">
@@ -45,15 +45,19 @@
       <section class="card find" id="findCard">
         <div class="card__head">
           <h2>🔍 핫딜 자동 찾기</h2>
-          <button type="button" class="tiny-btn" id="keysBtn">API 키</button>
+          <div class="head__acts">
+            <button type="button" class="tiny-btn" id="findRefresh">새로고침</button>
+            <button type="button" class="tiny-btn" id="keysBtn">API 키</button>
+          </div>
         </div>
 
-        <p class="find-state" id="findState">파트너스 API 키를 넣으면 실시간 상품이 떠요</p>
+        <p class="find-state" id="findState">핫딜 목록을 불러오는 중…</p>
 
         <div class="findtabs" role="tablist" aria-label="상품 소스">
-          <button type="button" class="ftab is-on" role="tab" data-src="goldbox">오늘의 골드박스</button>
-          <button type="button" class="ftab" role="tab" data-src="best">인기 카테고리</button>
-          <button type="button" class="ftab" role="tab" data-src="search">키워드 검색</button>
+          <button type="button" class="ftab is-on" role="tab" data-src="public">오늘의 핫딜</button>
+          <button type="button" class="ftab" role="tab" data-src="goldbox">골드박스</button>
+          <button type="button" class="ftab" role="tab" data-src="best">카테고리</button>
+          <button type="button" class="ftab" role="tab" data-src="search">검색</button>
         </div>
 
         <div class="findbar" id="findCatRow" hidden>
@@ -65,6 +69,8 @@
           <input id="findKeyword" class="input" type="search" placeholder="예) 전기요, 화장지, 캡슐커피" autocomplete="off" enterkeyhint="search" />
           <button type="button" class="mini-btn" id="findGo">찾기</button>
         </div>
+
+        <p class="find-tip" id="findTip">파트너스 키 없이도 공개 핫딜 게시판(클리앙·뽐뿌)에서 모은 <b>쿠팡 상품</b>을 보여줘요. 30분마다 새로 모아요.</p>
 
         <div class="findlist" id="findList">
           <div class="find-empty">불러오는 중…</div>
@@ -111,8 +117,13 @@
         </div>
 
         <div class="field">
-          <label for="fLink">쿠팡 링크</label>
-          <input id="fLink" class="input" type="url" inputmode="url" placeholder="https://link.coupang.com/a/..." autocomplete="off" />
+          <label for="fLink">쿠팡 링크 <span class="label__sub">(파트너스 단축 링크)</span></label>
+          <input id="fLink" class="input" type="url" inputmode="url" placeholder="https://coupa.ng/... 또는 https://link.coupang.com/a/..." autocomplete="off" />
+          <div class="link-tools">
+            <button type="button" class="mini-btn mini-btn--plain" id="copyOrigLink">원본 상품 링크 복사</button>
+            <a class="mini-btn mini-btn--plain" href="https://partners.coupang.com/#affiliate/ws/link" target="_blank" rel="noopener">링크 생성기 열기</a>
+          </div>
+          <p class="hint" id="linkHint">키 없이 쓸 때: [원본 복사] → [링크 생성기]에 붙여넣기 → 나온 짧은 링크를 여기 넣고 [다시 생성]</p>
         </div>
 
         <div class="field">
@@ -292,16 +303,15 @@
         </div>
         <p class="keys__note" id="cpNote"></p>
         <p class="hint">키는 이 폰 브라우저에만 저장돼요. 사이트에는 올라가지 않고, 상품을 찾을 때 서명용으로만 쓰여요.</p>
-        <button type="button" class="mini-btn mini-btn--plain" id="cpSample">키 없이 샘플 화면 먼저 보기</button>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="texts.js?v=10"></script>
-  <script src="card.js?v=10"></script>
-  <script src="app.js?v=10"></script>
-  <script src="hotdeal.js?v=10"></script>
+  <script src="texts.js?v=11"></script>
+  <script src="card.js?v=11"></script>
+  <script src="app.js?v=11"></script>
+  <script src="hotdeal.js?v=11"></script>
 </body>
 </html>

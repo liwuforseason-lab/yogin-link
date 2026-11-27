@@ -31,6 +31,8 @@
     seed: 0,
     image: null,        // { dataUrl, w, h, name, bytes }
     imgEl: null,        // HTMLImageElement (canvas용)
+    origin: "",         // 핫딜 자동 찾기에서 고른 상품의 원본 주소(제휴 링크 아님)
+    productId: "",      // 쿠팡 상품 ID(중복 확인용)
     busy: false
   };
 
@@ -82,6 +84,9 @@
         var noField = $("#fNo");
         if (!noField.value) noField.value = S.nextNo;
         $("#brandNo").textContent = S.nextNo;
+        if (YG.hotdeal && YG.hotdeal.renderList) {
+          try { YG.hotdeal.renderList(); } catch (e) { /* 목록이 아직 없으면 무시 */ }
+        }
         return S.products;
       })
       .catch(function (e) {
@@ -216,6 +221,49 @@
     img.src = data.dataUrl;
   }
 
+  /* ---------------- 자동 채우기 (핫딜 자동 찾기에서 사용) ---------------- */
+  function fillForm(v) {
+    if (!v) return;
+    if (v.title !== undefined) { $("#fTitle").value = v.title; }
+    if (v.price !== undefined) { $("#fPrice").value = v.price ? String(v.price) : ""; }
+    if (v.originalPrice !== undefined) { $("#fOrig").value = v.originalPrice ? String(v.originalPrice) : ""; }
+    if (v.point !== undefined) { $("#fPoint").value = v.point || ""; }
+    if (v.note !== undefined) { $("#fNote").value = v.note || ""; }
+    if (v.link !== undefined) { $("#fLink").value = v.link || ""; }
+    if (v.keywords !== undefined) { $("#fKeywords").value = (v.keywords || []).join(", "); }
+    if (v.productId !== undefined) S.productId = v.productId || "";
+    updateCalc();
+  }
+
+  /* dataURL/blob 이미지를 카드용으로 1080px에 맞춰 줄입니다. */
+  function useImageSource(src, name) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var max = 1080;
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        var r = Math.min(1, max / Math.max(w, h));
+        var cw = Math.round(w * r);
+        var ch = Math.round(h * r);
+        var cv = document.createElement("canvas");
+        cv.width = cw;
+        cv.height = ch;
+        var cx = cv.getContext("2d");
+        cx.fillStyle = "#ffffff";
+        cx.fillRect(0, 0, cw, ch);
+        cx.drawImage(img, 0, 0, cw, ch);
+        resolve({ dataUrl: cv.toDataURL("image/jpeg", 0.9), w: cw, h: ch, name: name || "photo.jpg" });
+      };
+      img.onerror = function () { reject(new Error("이미지를 읽지 못했어요")); };
+      img.src = src;
+    }).then(function (data) {
+      setImage(data, name);
+      if (S.draft) render();
+      return data;
+    });
+  }
+
   /* ---------------- 초안 만들기 ---------------- */
   function buildDraft() {
     var title = $("#fTitle").value.trim();
@@ -256,6 +304,7 @@
       badge: badge,
       link: $("#fLink").value.trim(),
       note: $("#fNote").value.trim(),
+      productId: S.productId || "",
       imageData: S.image ? S.image.dataUrl : "",
       imageName: S.image ? (S.image.shortName || "") : "",
       seed: S.seed,
@@ -288,6 +337,7 @@
     obj.image = imagePath !== undefined ? imagePath : jsonImagePath(d);
     obj.link = d.link;
     if (d.note) obj.note = d.note;
+    if (d.productId) obj.productId = String(d.productId);
     return JSON.stringify(obj, null, 2);
   }
 
@@ -693,6 +743,22 @@
       $("#fShort").placeholder = kw[0] || "전기요";
     });
 
+    $("#fLink").addEventListener("input", function () {
+      var v = this.value.trim();
+      var el = $("#linkHint");
+      if (!el) return;
+      if (!v) {
+        el.textContent = "키 없이 쓸 때: [원본 복사] → [링크 생성기]에 붙여넣기 → 나온 짧은 링크를 여기 넣고 [다시 생성]";
+        el.classList.remove("is-warn");
+      } else if (/coupang\.com\/(vp|np)\//.test(v)) {
+        el.textContent = "이건 제휴 링크가 아니에요. [링크 생성기]에서 짧은 링크(coupa.ng/…)를 만들어 넣어 주세요.";
+        el.classList.add("is-warn");
+      } else {
+        el.textContent = "제휴 링크로 들어갑니다.";
+        el.classList.remove("is-warn");
+      }
+    });
+
     $("#fImg").addEventListener("change", function () {
       var f = this.files && this.files[0];
       if (!f) return;
@@ -812,6 +878,19 @@
       $("#installBtn").hidden = true;
     });
   }
+
+  /* ---------------- 외부에서 쓰는 창구 ---------------- */
+  YG.app = {
+    toast: toast,
+    fill: fillForm,
+    useImageSource: useImageSource,
+    setOrigin: function (url) { S.origin = url || ""; },
+    originLink: function () { return S.origin; },
+    generate: function () { generate(false); },
+    products: function () { return S.products; },
+    num: num,
+    won: won
+  };
 
   /* ---------------- 시작 ---------------- */
   function init() {

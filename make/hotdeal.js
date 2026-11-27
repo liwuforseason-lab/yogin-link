@@ -1,6 +1,7 @@
-/* 요긴상회 · 핫딜 스튜디오 — 쿠팡 파트너스 API 연동
-   골드박스·카테고리·키워드로 상품을 찾아 → 제목·가격·사진·단축링크를 한 번에 채우고 4채널 초안까지 만듭니다.
-   키는 이 폰 브라우저(localStorage)에만 저장하고, 서명은 Vercel 프록시에서 대신합니다. */
+/* 요긴상회 · 핫딜 스튜디오 — 핫딜 자동 찾기
+   · 키 없이: 공개 핫딜 게시판(클리앙 알뜰구매·뽐뿌)에서 모은 쿠팡 핫딜 (src/data/hotdeals.json, 30분마다 갱신)
+   · 키 있으면: 쿠팡 파트너스 API 골드박스·카테고리·검색 + 단축 링크 자동 발급까지
+   키는 이 폰 브라우저(localStorage)에만 저장하고, 서명은 Vercel 프록시가 대신합니다. */
 window.YG = window.YG || {};
 
 (function (YG) {
@@ -11,13 +12,13 @@ window.YG = window.YG || {};
     secret: "yg.coupang.secret.v1",
     api: "yg.coupang.api.v1",
     src: "yg.hotdeal.src.v1",
-    cat: "yg.hotdeal.cat.v1",
-    keysOpen: "yg.hotdeal.keysOpen.v1"
+    cat: "yg.hotdeal.cat.v1"
   };
 
   var DEFAULT_API = "https://yogin-link.vercel.app/api/coupang";
+  var FEED_JSON = "../src/data/hotdeals.json";
+  var LINK_GEN = "https://partners.coupang.com/#affiliate/ws/link";
 
-  /* 파트너스 API 카테고리 코드 (요긴상회에서 자주 쓰는 것부터) */
   var CATS = [
     { id: "1014", name: "생활용품" },
     { id: "1013", name: "주방용품" },
@@ -37,17 +38,18 @@ window.YG = window.YG || {};
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
   var S = {
-    src: "goldbox",
+    src: "public",
     cat: "1014",
     keyword: "",
     items: [],
     loading: false,
-    sample: false,
     picked: null,
-    cache: {}      // key -> { at, items }
+    filling: false,
+    cache: {},
+    updatedAt: ""
   };
 
-  /* ---------------- 저장소 ---------------- */
+  /* ---------------- 저장소·키 ---------------- */
   function get(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function del(k) { try { localStorage.removeItem(k); } catch (e) {} }
@@ -61,6 +63,9 @@ window.YG = window.YG || {};
   }
   function apiBase() {
     return (get(STORE.api).trim() || DEFAULT_API).replace(/\/+$/, "");
+  }
+  function feedApi() {
+    return apiBase().replace(/\/coupang$/, "") + "/hotdeals";
   }
 
   /* ---------------- 작은 도구 ---------------- */
@@ -80,15 +85,17 @@ window.YG = window.YG || {};
       .join("&");
   }
   function toast(msg) { if (YG.app && YG.app.toast) YG.app.toast(msg); }
+  function shortName(t) {
+    var s = String(t || "");
+    return s.length > 22 ? s.slice(0, 22) + "…" : s;
+  }
 
   function friendlyError(status, data) {
     var raw = (data && (data.message || data.error)) || "";
     if (status === 401 && /not registered|Unknown error/i.test(raw)) {
       return "키가 등록돼 있지 않아요. Access Key·Secret Key를 다시 확인해 주세요.";
     }
-    if (status === 401 && /Invalid signature/i.test(raw)) {
-      return "서명이 맞지 않아요. 키를 다시 저장해 주세요.";
-    }
+    if (status === 401 && /Invalid signature/i.test(raw)) return "서명이 맞지 않아요. 키를 다시 저장해 주세요.";
     if (status === 401) return "키를 확인해 주세요. (" + (raw || "401") + ")";
     if (status === 403) return "권한이 없어요. " + raw;
     if (status === 429) return "잠깐 호출이 많았어요. 1분 뒤 다시 시도해 주세요.";
@@ -96,7 +103,7 @@ window.YG = window.YG || {};
     return raw || ("요청이 실패했어요 (" + status + ")");
   }
 
-  /* ---------------- API 호출 ---------------- */
+  /* ---------------- 파트너스 API (키 필요) ---------------- */
   function request(params, opts) {
     opts = opts || {};
     var k = keys();
@@ -130,21 +137,21 @@ window.YG = window.YG || {};
     });
   }
 
-  /* 응답 모양이 골드박스/카테고리/검색에서 조금씩 달라서 한 모양으로 맞춥니다. */
   function normalize(json) {
     var out = [];
     function push(x) {
       if (!x || !x.productId) return;
       out.push({
-        id: String(x.productId),
         productId: String(x.productId),
-        name: String(x.productName || "").trim(),
+        title: String(x.productName || "").trim(),
         price: Number(x.productPrice) || 0,
+        originalPrice: Number(x.originalPrice || 0) || 0,
         image: String(x.productImage || ""),
         url: String(x.productUrl || ""),
         rocket: !!x.isRocket,
         free: !!x.isFreeShipping,
-        category: x.categoryName || ""
+        source: "api",
+        sourceLabel: "파트너스"
       });
     }
     var d = json && json.data;
@@ -154,17 +161,18 @@ window.YG = window.YG || {};
         else push(x);
       });
     }
-    // 같은 상품 중복 제거
     var seen = {};
     return out.filter(function (x) {
-      if (seen[x.id]) return false;
-      seen[x.id] = 1;
+      if (seen[x.productId]) return false;
+      seen[x.productId] = 1;
       return true;
     });
   }
 
+  /* ---------------- 이미지 ---------------- */
   function imageProxy(src) {
-    return apiBase() + "?" + query({ r: "image", url: src });
+    if (!src) return "";
+    return feedApi() + "?" + query({ r: "image", url: src });
   }
 
   function fetchImageData(src) {
@@ -188,11 +196,85 @@ window.YG = window.YG || {};
     return { r: "search", keyword: S.keyword, limit: 10 };
   }
 
-  function load(force) {
+  function loadPublic(force) {
     if (S.loading) return;
-    if (!hasKeys()) { renderState(); renderList(); return; }
+    S.loading = true;
+    S.picked = null;
+    setState("핫딜 목록을 불러오는 중…", "loading");
+    $("#findList").innerHTML = '<div class="find-empty">쿠팡 핫딜을 모으고 있어요…</div>';
+
+    var jsonUrl = FEED_JSON + "?t=" + Date.now();
+    var liveUrl = feedApi() + "?r=feed&limit=30&t=" + Date.now();
+
+    var fromJson = function () {
+      return fetch(jsonUrl, { cache: "no-store" }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    };
+    var fromLive = function () {
+      return fetch(liveUrl, { cache: "no-store" }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    };
+
+    var first = force ? fromLive().catch(fromJson) : fromJson().catch(fromLive);
+
+    first.then(function (data) {
+      var items = (data && data.items) || [];
+      S.items = items.filter(function (x) { return x && x.title && x.price; });
+      S.updatedAt = (data && data.updatedAt) || "";
+      S.loading = false;
+      if (!S.items.length) {
+        setState("핫딜 목록이 비어 있어요");
+        $("#findList").innerHTML = '<div class="find-empty">지금은 모인 핫딜이 없어요. 새로고침을 눌러 보세요.<button type="button" class="mini-btn" id="findRetry">새로고침</button></div>';
+        bindRetry();
+        return;
+      }
+      setState("쿠팡 핫딜 " + S.items.length + "개" + (S.updatedAt ? " · " + agoText(S.updatedAt) : ""), "ok");
+      renderList();
+    }).catch(function (e) {
+      S.loading = false;
+      setState("불러오기 실패", "error");
+      $("#findList").innerHTML = '<div class="find-empty find-empty--err">핫딜 목록을 못 가져왔어요.<button type="button" class="mini-btn" id="findRetry">다시 시도</button></div>';
+      bindRetry();
+      console.warn(e);
+    });
+  }
+
+  function bindRetry() {
+    var b = $("#findRetry");
+    if (b) b.addEventListener("click", function () { load(true); });
+  }
+
+  function agoText(iso) {
+    var t = Date.parse(iso);
+    if (!t) return "";
+    var m = Math.floor((Date.now() - t) / 60000);
+    if (m < 1) return "방금 갱신";
+    if (m < 60) return m + "분 전 갱신";
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + "시간 전 갱신";
+    return Math.floor(h / 24) + "일 전 갱신";
+  }
+
+  function loadApi(force) {
+    if (S.loading) return;
+    if (!hasKeys()) {
+      setState("파트너스 API 키가 있어야 쓸 수 있어요", "idle");
+      $("#findList").innerHTML =
+        '<div class="find-empty">골드박스·카테고리·검색은 파트너스 API 키가 필요해요.' +
+        '<button type="button" class="mini-btn" id="findKeys2">키 넣기</button>' +
+        '<button type="button" class="mini-btn mini-btn--plain" id="findPublic">오늘의 핫딜 보기</button></div>';
+      var k2 = $("#findKeys2");
+      var p2 = $("#findPublic");
+      if (k2) k2.addEventListener("click", openKeys);
+      if (p2) p2.addEventListener("click", function () { switchTab("public"); });
+      return;
+    }
     if (S.src === "search" && !S.keyword) {
-      setState("검색어를 넣고 🔍 버튼을 눌러 주세요.", "idle");
+      setState("검색어를 넣고 찾기를 눌러 주세요", "idle");
       if ($("#findKeyword")) $("#findKeyword").focus();
       return;
     }
@@ -201,9 +283,8 @@ window.YG = window.YG || {};
     var hit = S.cache[key];
     if (!force && hit && Date.now() - hit.at < 3 * 60 * 1000) {
       S.items = hit.items;
-      S.sample = false;
-      renderList();
       setState(labelFor() + " · " + S.items.length + "개 (3분 캐시)");
+      renderList();
       return;
     }
 
@@ -214,7 +295,6 @@ window.YG = window.YG || {};
 
     request(paramsFor()).then(function (json) {
       S.items = normalize(json);
-      S.sample = false;
       S.cache[key] = { at: Date.now(), items: S.items };
       S.loading = false;
       if (!S.items.length) {
@@ -230,10 +310,14 @@ window.YG = window.YG || {};
       $("#findList").innerHTML =
         '<div class="find-empty find-empty--err">' + esc(e.message) +
         '<button type="button" class="mini-btn" id="findRetry">다시 시도</button></div>';
-      var retry = $("#findRetry");
-      if (retry) retry.addEventListener("click", function () { load(true); });
+      bindRetry();
       if (e.status === 401) openKeys();
     });
+  }
+
+  function load(force) {
+    if (S.src === "public") loadPublic(force);
+    else loadApi(force);
   }
 
   function labelFor() {
@@ -253,25 +337,27 @@ window.YG = window.YG || {};
   }
 
   function renderState() {
-    if (hasKeys()) {
-      setState("키 연결됨 · 골드박스를 바로 불러올 수 있어요", "ok");
-    } else {
-      setState("파트너스 API 키를 넣으면 실시간 상품이 떠요", "idle");
+    if (S.src === "public") {
+      var btn = $("#keysBtn");
+      if (btn) btn.textContent = hasKeys() ? "API 연결됨" : "API 키";
+      return;
     }
-    var btn = $("#keysBtn");
-    if (btn) btn.textContent = hasKeys() ? "키 연결됨" : "API 키";
+    if (hasKeys()) setState("키 연결됨 · 골드박스를 바로 불러올 수 있어요", "ok");
+    else setState("파트너스 API 키가 있어야 쓸 수 있어요", "idle");
+    var b2 = $("#keysBtn");
+    if (b2) b2.textContent = hasKeys() ? "API 연결됨" : "API 키";
   }
 
-  /* ---------------- 등록 여부 확인 ---------------- */
+  /* ---------------- 등록 여부 ---------------- */
   function normTitle(t) {
     return String(t || "").toLowerCase().replace(/[\s\[\](){}·,.\-+/%]/g, "").replace(/[^0-9a-z가-힣]/g, "");
   }
   function dupOf(it) {
     var list = (YG.app && YG.app.products()) || [];
-    var b = normTitle(it.name);
+    var b = normTitle(it.title);
     for (var i = 0; i < list.length; i++) {
       var p = list[i];
-      if (p.productId && String(p.productId) === String(it.productId)) return p;
+      if (it.productId && p.productId && String(p.productId) === String(it.productId)) return p;
       var a = normTitle(p.title || p.short);
       if (!a || !b) continue;
       if (a === b) return p;
@@ -285,158 +371,101 @@ window.YG = window.YG || {};
     var box = $("#findList");
     if (!box) return;
     if (!S.items.length) {
-      box.innerHTML = hasKeys()
-        ? '<div class="find-empty">‘불러오기’를 누르면 상품이 나와요.</div>'
-        : '<div class="find-empty">아직 API 키가 없어요.<button type="button" class="mini-btn" id="findKeys2">키 넣기</button>' +
-          '<button type="button" class="mini-btn mini-btn--plain" id="findSample">샘플로 미리보기</button></div>';
-      bindEmptyButtons();
+      box.innerHTML = '<div class="find-empty">불러오기를 눌러 주세요.</div>';
       return;
     }
 
-    box.innerHTML = S.items.map(function (it) {
+    box.innerHTML = S.items.map(function (it, idx) {
       var dup = dupOf(it);
       var chips =
-        (it.rocket ? '<span class="chip chip--rocket">로켓배송</span>' : "") +
+        '<span class="chip chip--src">' + esc(it.sourceLabel || (it.source === "api" ? "파트너스" : "핫딜")) + "</span>" +
+        (it.rocket ? '<span class="chip chip--rocket">로켓</span>' : "") +
         (it.free ? '<span class="chip">무료배송</span>' : "");
-      return '<div class="pitem' + (S.picked === it.id ? " is-picked" : "") + '" data-id="' + esc(it.id) + '" role="button" tabindex="0">' +
-        '<div class="pitem__thumb">' +
-          (it.image
-            ? '<img loading="lazy" src="' + esc(S.sample ? it.image : imageProxy(it.image)) + '" alt="" onerror="this.style.display=\'none\'" />'
-            : '<span class="pitem__noimg">🛍️</span>') +
-        "</div>" +
+      var img = it.image
+        ? '<img loading="lazy" src="' + esc(imageProxy(it.image)) + '" alt="" onerror="this.onerror=null;this.src=\'' + esc(it.image) + '\'" />'
+        : '<span class="pitem__noimg">' + esc((it.title || "?").replace(/[^가-힣a-zA-Z0-9]/g, "").charAt(0) || "?") + "</span>";
+
+      return '<div class="pitem' + (S.picked === idx ? " is-picked" : "") + '" data-idx="' + idx + '">' +
+        '<div class="pitem__thumb">' + img + "</div>" +
         '<div class="pitem__body">' +
-          '<div class="pitem__name">' + esc(it.name) + "</div>" +
+          '<div class="pitem__name">' + esc(it.title) + "</div>" +
           '<div class="pitem__meta"><b>' + esc(won(it.price)) + "</b>" + chips + "</div>" +
           (dup ? '<div class="pitem__dup">이미 등록됨 · ' + esc(dup.no) + " " + esc(dup.title || "") + "</div>" : "") +
-          '<div class="pitem__go" data-go="' + esc(it.id) + '"><span>' + (S.picked === it.id ? "준비 중…" : "이 상품으로 만들기") + "</span></div>" +
+          '<div class="pitem__acts">' +
+            '<button type="button" class="mini-btn" data-act="make" data-idx="' + idx + '">' +
+              (S.picked === idx ? "만드는 중…" : "이 상품으로 만들기") + "</button>" +
+            (it.productId
+              ? '<button type="button" class="mini-btn mini-btn--plain" data-act="copy" data-idx="' + idx + '">원본 링크 복사</button>'
+              : '<button type="button" class="mini-btn mini-btn--plain" data-act="search" data-idx="' + idx + '">쿠팡에서 찾기</button>') +
+            '<a class="mini-btn mini-btn--plain" href="' + LINK_GEN + '" target="_blank" rel="noopener">링크 생성기</a>' +
+          "</div>" +
         "</div>" +
       "</div>";
-    }).join("") + (S.sample ? '<p class="find-note">샘플 화면이에요. 실제 상품이 아니고, 링크는 비워 둡니다.</p>' : "");
-
-    bindEmptyButtons();
+    }).join("") +
+      '<p class="find-note">' + (S.src === "public"
+        ? "공개 핫딜 게시판에서 모은 쿠팡 상품이에요. 가격·재고는 바뀔 수 있어요."
+        : "파트너스 API에서 실시간으로 받아온 상품이에요.") + "</p>";
   }
 
-  function bindEmptyButtons() {
-    var b1 = $("#findKeys2");
-    var b2 = $("#findSample");
-    if (b1) b1.addEventListener("click", openKeys);
-    if (b2) b2.addEventListener("click", showSample);
-  }
-
-  /* ---------------- 상품 하나 담기 ---------------- */
-  function pick(id) {
-    if (S.picked || S.filling) return;
-    var it = S.items.filter(function (x) { return x.id === id; })[0];
+  /* ---------------- 상품 담기 ---------------- */
+  function pick(idx) {
+    if (S.filling) return;
+    var it = S.items[idx];
     if (!it) return;
-    if (S.sample) { fillSample(it); return; }
 
     S.filling = true;
-    S.picked = id;
+    S.picked = idx;
     renderList();
-    setState("‘" + shortName(it.name) + "’ 담는 중…", "loading");
+    setState("‘" + shortName(it.title) + "’ 담는 중…", "loading");
 
     var fill = {
-      title: it.name,
+      title: it.title,
       price: it.price,
-      originalPrice: "",
+      originalPrice: it.originalPrice || "",
       point: it.rocket ? "로켓배송" : (it.free ? "무료배송" : ""),
       note: "",
       link: "",
       keywords: [],
-      productId: it.productId
+      productId: it.productId || ""
     };
 
-    var steps = [];
+    // 글·카드는 바로 채우고, 사진과 링크는 준비되는 대로
+    YG.app.fill(fill);
+    YG.app.setOrigin(it.url || it.postUrl || "");
+
+    var jobs = [];
+
     if (it.image) {
-      steps.push(
+      jobs.push(
         fetchImageData(it.image)
-          .then(function (dataUrl) {
-            return YG.app.useImageSource(dataUrl, "coupang-" + it.productId + ".jpg");
-          })
+          .then(function (dataUrl) { return YG.app.useImageSource(dataUrl, "hotdeal.jpg"); })
           .catch(function () { toast("상품 사진은 못 가져왔어요. 직접 넣어 주세요"); })
       );
     }
 
-    steps.push(
-      request({ r: "deeplink" }, { body: { coupangUrls: [it.url] } })
-        .then(function (json) {
-          var row = json && json.data && json.data[0];
-          if (row && row.shortenUrl) fill.link = row.shortenUrl;
-          else fill.link = it.url;
-        })
-        .catch(function (e) {
-          fill.link = it.url;
-          toast("단축 링크를 못 만들었어요: " + e.message);
-        })
-    );
+    if (it.source === "api" && it.url) {
+      jobs.push(
+        request({ r: "deeplink" }, { body: { coupangUrls: [it.url] } })
+          .then(function (json) {
+            var row = json && json.data && json.data[0];
+            if (row && row.shortenUrl) YG.app.fill({ link: row.shortenUrl });
+          })
+          .catch(function (e) { toast("단축 링크를 못 만들었어요: " + e.message); })
+      );
+    }
 
-    Promise.all(steps).then(function () {
-      YG.app.fill(fill);
+    Promise.all(jobs).then(function () {
       S.filling = false;
       S.picked = null;
-      setState("‘" + shortName(it.name) + "’ 채웠어요 · 아래에서 4채널 초안 확인");
       renderList();
       YG.app.generate();
-      if (fill.link && fill.link.indexOf("coupa.ng") === -1) {
-        toast("단축 링크 대신 상품 주소가 들어갔어요. 그대로 올리지 마세요");
+      if (it.source === "api" && it.url) {
+        setState("단축 링크까지 만들었어요 · 아래 4채널 확인", "ok");
+      } else {
+        setState("‘" + shortName(it.title) + "’ 채웠어요 · 링크만 붙여넣으면 끝", "ok");
+        toast("4채널 초안을 만들었어요 · 링크는 '링크 생성기'에서 만들어 주세요");
       }
     });
-  }
-
-  function shortName(t) {
-    var s = String(t || "");
-    return s.length > 22 ? s.slice(0, 22) + "…" : s;
-  }
-
-  function fillSample(it) {
-    S.picked = it.id;
-    renderList();
-    var fill = {
-      title: it.name,
-      price: it.price,
-      originalPrice: "",
-      point: it.rocket ? "로켓배송" : "",
-      note: "",
-      link: "",
-      keywords: [],
-      productId: ""
-    };
-    var done = function () {
-      S.picked = null;
-      renderList();
-      setState("샘플로 채웠어요 · 링크는 비어 있어요");
-      YG.app.generate();
-      toast("샘플이에요. 링크는 직접 넣어 주세요");
-    };
-    if (!it.image) { YG.app.fill(fill); done(); return; }
-    YG.app.useImageSource(it.image, "sample.jpg")
-      .catch(function () {})
-      .then(function () { YG.app.fill(fill); done(); });
-  }
-
-  /* ---------------- 샘플 데이터 ---------------- */
-  function svgImage(emoji, label, bg) {
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">' +
-      '<rect width="600" height="600" fill="' + bg + '"/>' +
-      '<text x="300" y="320" font-size="190" text-anchor="middle">' + emoji + "</text>" +
-      '<text x="300" y="470" font-size="44" text-anchor="middle" fill="#a2806f" font-family="sans-serif">' + label + "</text>" +
-      "</svg>";
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-  }
-
-  function showSample() {
-    S.sample = true;
-    S.items = [
-      { id: "s1", productId: "s1", name: "듀플렉스 무자계 열선 전기요 (샘플)", price: 52600, image: svgImage("🧣", "전기요", "#fdeee6"), url: "", rocket: true, free: true },
-      { id: "s2", productId: "s2", name: "깨끗한나라 순수 3겹 화장지 30롤 (샘플)", price: 15900, image: svgImage("🧻", "화장지", "#f3f0e4"), url: "", rocket: true, free: false },
-      { id: "s3", productId: "s3", name: "스타벅스 하우스 블렌드 캡슐 100개입 (샘플)", price: 27800, image: svgImage("☕", "커피", "#efe6dd"), url: "", rocket: true, free: true },
-      { id: "s4", productId: "s4", name: "이케아 접이식 수납박스 3개 세트 (샘플)", price: 9900, image: svgImage("📦", "수납", "#f6ece4"), url: "", rocket: false, free: true },
-      { id: "s5", productId: "s5", name: "무선 핸디 청소기 2in1 (샘플)", price: 89000, image: svgImage("🧹", "청소기", "#eef0ea"), url: "", rocket: false, free: false },
-      { id: "s6", productId: "s6", name: "강아지 배변패드 100매 대형 (샘플)", price: 13900, image: svgImage("🐶", "반려동물", "#f7efea"), url: "", rocket: true, free: false }
-    ];
-    setState("샘플 미리보기 · 실제 상품이 아니에요", "idle");
-    renderList();
-    $("#findList").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   /* ---------------- API 키 시트 ---------------- */
@@ -461,7 +490,6 @@ window.YG = window.YG || {};
     if (api) set(STORE.api, api); else del(STORE.api);
     $("#cpNote").textContent = "저장했어요. 연결 테스트를 해보세요.";
     renderState();
-    load(true);
   }
 
   function clearKeys() {
@@ -469,7 +497,7 @@ window.YG = window.YG || {};
     del(STORE.secret);
     $("#cpAccess").value = "";
     $("#cpSecret").value = "";
-    $("#cpNote").textContent = "키를 지웠어요.";
+    $("#cpNote").textContent = "키를 지웠어요. 이제 '오늘의 핫딜'만 쓸 수 있어요.";
     renderState();
   }
 
@@ -481,12 +509,14 @@ window.YG = window.YG || {};
     btn.disabled = true;
     btn.textContent = "확인 중…";
     $("#cpNote").textContent = "";
+    set(STORE.access, a);
+    set(STORE.secret, s);
 
     request({ r: "goldbox", limit: 1 }).then(function (json) {
       var list = normalize(json);
       $("#cpNote").textContent = list.length
         ? "연결 성공 · 골드박스에서 상품 " + list.length + "개 확인"
-        : "연결은 됐는데 상품이 비어 있어요 (잠시 뒤 다시 시도)";
+        : "연결은 됐어요 (지금은 골드박스가 비어 있어요)";
     }).catch(function (e) {
       $("#cpNote").textContent = "실패: " + e.message;
     }).then(function () {
@@ -495,19 +525,38 @@ window.YG = window.YG || {};
     });
   }
 
+  /* ---------------- 탭 ---------------- */
+  function switchTab(src) {
+    S.src = src;
+    set(STORE.src, src);
+    $$(".ftab").forEach(function (b) {
+      b.classList.toggle("is-on", b.getAttribute("data-src") === src);
+    });
+    toggleBars();
+    renderState();
+    load(false);
+  }
+
+  function toggleBars() {
+    var catRow = $("#findCatRow");
+    var searchRow = $("#findSearchRow");
+    if (catRow) catRow.hidden = S.src !== "best";
+    if (searchRow) searchRow.hidden = S.src !== "search";
+    var tip = $("#findTip");
+    if (tip) tip.hidden = S.src !== "public";
+  }
+
+  function submitSearch() {
+    var v = ($("#findKeyword").value || "").trim();
+    if (!v) { $("#findKeyword").focus(); toast("검색어를 넣어 주세요"); return; }
+    S.keyword = v;
+    switchTab("search");
+  }
+
   /* ---------------- 이벤트 ---------------- */
   function bind() {
     $$(".ftab").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        $$(".ftab").forEach(function (b) { b.classList.remove("is-on"); });
-        btn.classList.add("is-on");
-        S.src = btn.getAttribute("data-src");
-        set(STORE.src, S.src);
-        S.sample = false;
-        S.picked = null;
-        toggleBars();
-        load(true);
-      });
+      btn.addEventListener("click", function () { switchTab(btn.getAttribute("data-src")); });
     });
 
     var catSel = $("#findCat");
@@ -527,7 +576,7 @@ window.YG = window.YG || {};
     }
 
     var go = $("#findGo");
-    if (go) go.addEventListener("click", function () { submitSearch(); });
+    if (go) go.addEventListener("click", submitSearch);
     var kw = $("#findKeyword");
     if (kw) {
       kw.addEventListener("keydown", function (e) {
@@ -536,52 +585,63 @@ window.YG = window.YG || {};
     }
 
     $("#findList").addEventListener("click", function (e) {
-      var card = e.target.closest(".pitem");
-      if (!card) return;
-      var id = card.getAttribute("data-id");
-      if (id) pick(id);
-    });
-    $("#findList").addEventListener("keydown", function (e) {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      var card = e.target.closest(".pitem");
-      if (!card) return;
-      e.preventDefault();
-      pick(card.getAttribute("data-id"));
+      var btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      var idx = Number(btn.getAttribute("data-idx"));
+      var act = btn.getAttribute("data-act");
+      var it = S.items[idx];
+      if (!it) return;
+      if (act === "make") pick(idx);
+      else if (act === "copy") copyLink(it.url);
+      else if (act === "search") openCoupangSearch(it.title);
     });
 
     $("#keysBtn").addEventListener("click", openKeys);
+    $("#findRefresh").addEventListener("click", function () { load(true); });
     $("#apiClose").addEventListener("click", closeKeys);
     $("#apiSheet").addEventListener("click", function (e) {
       if (e.target.getAttribute("data-close")) closeKeys();
     });
     $("#cpSave").addEventListener("click", saveKeys);
     $("#cpClear").addEventListener("click", clearKeys);
-    $("#cpTest").addEventListener("click", testKeys);
-    $("#cpSample").addEventListener("click", function () { closeKeys(); showSample(); });
+    $("#cpTest").addEventListener("click", function () { set(STORE.access, $("#cpAccess").value.trim()); set(STORE.secret, $("#cpSecret").value.trim()); testKeys(); });
+
+    var copyBtn = $("#copyOrigLink");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function () {
+        var orig = (YG.app && YG.app.originLink && YG.app.originLink()) || "";
+        if (!orig) { toast("원본 링크가 없어요. 상품을 먼저 골라 주세요"); return; }
+        copyLink(orig);
+      });
+    }
   }
 
-  function submitSearch() {
-    var v = ($("#findKeyword").value || "").trim();
-    if (!v) { $("#findKeyword").focus(); toast("검색어를 넣어 주세요"); return; }
-    S.keyword = v;
-    S.src = "search";
-    $$(".ftab").forEach(function (b) {
-      b.classList.toggle("is-on", b.getAttribute("data-src") === "search");
-    });
-    toggleBars();
-    load(true);
+  function copyLink(url) {
+    if (!url) { toast("복사할 링크가 없어요"); return; }
+    var done = function () { toast("링크를 복사했어요 · 링크 생성기에 붙여넣으세요"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(function () { toast("복사가 안 돼요. 길게 눌러 복사해 주세요"); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) { toast("복사가 안 돼요"); }
+      document.body.removeChild(ta);
+    }
   }
 
-  function toggleBars() {
-    var catRow = $("#findCatRow");
-    var searchRow = $("#findSearchRow");
-    if (catRow) catRow.hidden = S.src !== "best";
-    if (searchRow) searchRow.hidden = S.src !== "search";
+  function openCoupangSearch(title) {
+    var q = String(title || "").replace(/\s+/g, " ").trim().slice(0, 40);
+    window.open("https://www.coupang.com/np/search?q=" + encodeURIComponent(q), "_blank", "noopener");
   }
 
   /* ---------------- 시작 ---------------- */
   function init() {
-    S.src = get(STORE.src) || "goldbox";
+    var saved = get(STORE.src);
+    S.src = (saved === "goldbox" || saved === "best" || saved === "search") && hasKeys() ? saved : "public";
     S.cat = get(STORE.cat) || "1014";
     $$(".ftab").forEach(function (b) {
       b.classList.toggle("is-on", b.getAttribute("data-src") === S.src);
@@ -589,8 +649,7 @@ window.YG = window.YG || {};
     bind();
     toggleBars();
     renderState();
-    renderList();
-    if (hasKeys()) setTimeout(function () { load(false); }, 300);
+    load(false);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
@@ -599,7 +658,7 @@ window.YG = window.YG || {};
   YG.hotdeal = {
     load: load,
     openKeys: openKeys,
-    showSample: showSample,
-    hasKeys: hasKeys
+    hasKeys: hasKeys,
+    renderList: renderList
   };
 })(window.YG);

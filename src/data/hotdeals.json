@@ -1,0 +1,104 @@
+{
+  "shop": {
+    "name": "요긴상회",
+    "updated": "2026-11-27",
+    "note": "공개 핫딜 게시판(클리앙 알뜰구매·뽐뿌)에서 쿠팡 상품만 모은 목록입니다. 다른 사람의 제휴 링크는 버리고 상품 주소만 남깁니다."
+  },
+  "updatedAt": "2026-11-27T04:21:33.892Z",
+  "count": 7,
+  "items": [
+    {
+      "productId": "7759445165",
+      "title": "Apple 정품 아이폰 에어 맥세이프 투명 케이스",
+      "price": 0,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/2026/3/15701955/4200ef3366f6b6.png?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/7759445165",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19170944",
+      "rocket": false,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "8967792048",
+      "title": "농심 새우깡 와사비맛 70g 5개",
+      "price": 5000,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/2025/11/15587712/14982ccdc3aadd.jpg?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/8967792048",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19088948",
+      "rocket": true,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "6258625960",
+      "title": "프링글스 오리지날 110g, 12개",
+      "price": 15980,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/2025/11/15589423/1538689bbae177.jpg?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/6258625960?itemId=12729801536&vendorItemId=3064815450",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19090068",
+      "rocket": true,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "6675314352",
+      "title": "해태제과 구운감자, 135g, 3개",
+      "price": 7700,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/15563624/afc329bc0f0ef.jpeg?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/6675314352",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19073089",
+      "rocket": false,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "8157280227",
+      "title": "포카리스웨트, 340ml, 48개",
+      "price": 26820,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/15563386/ae6dc61712718.jpeg?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/8157280227",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19072907",
+      "rocket": true,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "8308921966",
+      "title": "초록매실 스파클링 제로, 350ml, 20개",
+      "price": 10320,
+      "originalPrice": 0,
+      "image": "https://edgio.clien.net/F01/15559097/9691760f25841.jpg?scale=width:740",
+      "url": "https://www.coupang.com/vp/products/8308921966",
+      "source": "clien",
+      "sourceLabel": "클리앙",
+      "postUrl": "https://www.clien.net/service/board/jirum/19070098",
+      "rocket": false,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    },
+    {
+      "productId": "",
+      "title": "투키(Toocki) C to C 타입 60W PD 고속충전 케이블 1m",
+      "price": 8290,
+      "originalPrice": 0,
+      "image": "",
+      "url": "http://www.ppomppu.co.kr/zboard/view.php?id=ppomppu&no=752248",
+      "source": "ppomppu",
+      "sourceLabel": "뽐뿌게시판",
+      "postUrl": "http://www.ppomppu.co.kr/zboard/view.php?id=ppomppu&no=752248",
+      "note": "책상 위나 차량에서 가장 쓰기 좋은 1m 표준 길이에 내구성이 탄탄해 소모품인 C to C 충전 케이블을 여분으로 구비해 두기 좋은 가성비 제품입니다.",
+      "postedAt": "2026-11-27T03:13:50.000Z",
+      "rocket": false,
+      "foundAt": "2026-11-27T04:21:33.892Z"
+    }
+  ]
+}
