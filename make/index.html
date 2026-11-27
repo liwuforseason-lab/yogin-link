@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>핫딜 스튜디오 · 요긴상회</title>
+<meta name="description" content="상품 하나만 넣으면 블로그·인스타·스레드 글과 카드 이미지, 번호허브 등록까지 한 번에 만들어 주는 요긴상회 전용 스튜디오." />
+<meta name="theme-color" content="#fdf6ef" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="핫딜 스튜디오" />
+<meta property="og:title" content="핫딜 스튜디오 · 요긴상회" />
+<meta property="og:description" content="상품 하나 넣으면 4채널 글이랑 카드 이미지가 한 번에 나와요." />
+<meta property="og:type" content="website" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="stylesheet" href="app.css?v=1" />
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">요</span>
+        <div class="brand__text">
+          <h1>핫딜 스튜디오</h1>
+          <p id="brandSub">번호 <b id="brandNo">-</b> 준비 중</p>
+        </div>
+      </div>
+      <button type="button" class="ghost-btn" id="historyBtn">이력</button>
+    </header>
+
+    <div class="install-hint" id="installHint" hidden>
+      <p>홈 화면에 추가하면 앱처럼 바로 열려요. <span id="installHow">크롬 우측 상단 ⋮ → '홈 화면에 추가'</span></p>
+      <div class="install-hint__row">
+        <button type="button" class="mini-btn" id="installBtn" hidden>지금 설치</button>
+        <button type="button" class="mini-btn mini-btn--plain" id="installClose">닫기</button>
+      </div>
+    </div>
+
+    <main>
+
+      <section class="card">
+        <div class="card__head">
+          <h2>상품 넣기</h2>
+          <button type="button" class="tiny-btn" id="reloadData">번호 새로고침</button>
+        </div>
+
+        <div class="field">
+          <label for="fNo">번호</label>
+          <div class="no-row">
+            <input id="fNo" class="input input--no" type="text" inputmode="numeric" maxlength="4" placeholder="009" />
+            <span class="no-hint" id="noHint">불러오는 중…</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fTitle">상품명</label>
+          <input id="fTitle" class="input" type="text" placeholder="예) 듀플렉스 무자계 열선 전기요" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label>가격</label>
+          <div class="price-row">
+            <div class="price-cell">
+              <span class="price-cell__label">정가</span>
+              <input id="fOrig" class="input" type="text" inputmode="numeric" placeholder="192000" />
+            </div>
+            <div class="price-cell">
+              <span class="price-cell__label">할인가</span>
+              <input id="fPrice" class="input" type="text" inputmode="numeric" placeholder="52600" />
+            </div>
+          </div>
+          <p class="calc" id="calcLine">정가와 할인가를 넣으면 할인율이 자동으로 계산돼요.</p>
+        </div>
+
+        <div class="field">
+          <label for="fPoint">한 줄 특징 / 장점</label>
+          <textarea id="fPoint" class="input input--area" rows="2" placeholder="예) 무자계 열선에 과열방지·타이머까지, 로켓배송"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="fLink">쿠팡 링크</label>
+          <input id="fLink" class="input" type="url" inputmode="url" placeholder="https://link.coupang.com/a/..." autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="fImg">상품 사진</label>
+          <label class="upload" id="uploadBox">
+            <input id="fImg" type="file" accept="image/*" hidden />
+            <span class="upload__empty" id="uploadEmpty">
+              <span class="upload__icon">＋</span>
+              <span>갤러리에서 사진 고르기</span>
+            </span>
+            <img id="uploadPreview" class="upload__preview" alt="" hidden />
+            <button type="button" class="upload__remove" id="imgRemove" hidden>사진 빼기</button>
+          </label>
+          <p class="hint" id="imgHint">카드 이미지에 그대로 들어가요. 1080px로 자동 조절됩니다.</p>
+        </div>
+
+        <details class="adv">
+          <summary>고급 설정 <span>(짧은 이름·배지·키워드)</span></summary>
+          <div class="adv__body">
+            <div class="field field--sm">
+              <label for="fShort">짧은 이름</label>
+              <input id="fShort" class="input" type="text" placeholder="전기요" />
+            </div>
+            <div class="field field--sm">
+              <label for="fBadge">배지</label>
+              <input id="fBadge" class="input" type="text" placeholder="겨울 필수템" />
+            </div>
+            <div class="field field--sm">
+              <label for="fKeywords">검색 키워드</label>
+              <input id="fKeywords" class="input" type="text" placeholder="전기요, 전기매트, 겨울" />
+              <p class="hint">쉼표로 구분. 첫 키워드가 글의 대표 단어로 쓰여요.</p>
+            </div>
+            <div class="field field--sm">
+              <label for="fNote">메모 (배송·후기 등)</label>
+              <input id="fNote" class="input" type="text" placeholder="로켓배송 · 상품평 1,991개" />
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card result" id="result" hidden>
+        <div class="card__head">
+          <h2>만들어진 결과</h2>
+          <button type="button" class="tiny-btn" id="regenBtn">다시 생성</button>
+        </div>
+
+        <nav class="tabs" role="tablist" aria-label="결과 종류">
+          <button type="button" class="tab is-on" role="tab" data-tab="blog">블로그</button>
+          <button type="button" class="tab" role="tab" data-tab="insta">인스타</button>
+          <button type="button" class="tab" role="tab" data-tab="threads">스레드</button>
+          <button type="button" class="tab" role="tab" data-tab="hub">번호허브</button>
+        </nav>
+
+        <div class="panel" id="panel-blog" role="tabpanel">
+          <div class="panel__bar">
+            <span class="panel__label">네이버 블로그</span>
+            <div class="panel__acts">
+              <button type="button" class="copy-btn" data-copy="blogTitle">제목만</button>
+              <button type="button" class="copy-btn copy-btn--main" data-copy="blogBody">본문 전체 복사</button>
+            </div>
+          </div>
+          <div class="readout" id="outBlogTitle"></div>
+          <div class="readout readout--body" id="outBlogBody"></div>
+        </div>
+
+        <div class="panel" id="panel-insta" role="tabpanel" hidden>
+          <div class="panel__bar">
+            <span class="panel__label">인스타그램</span>
+            <div class="panel__acts">
+              <button type="button" class="copy-btn copy-btn--main" data-copy="instaCaption">캡션 복사</button>
+            </div>
+          </div>
+          <div class="cardwrap">
+            <canvas id="cardCanvas" width="1080" height="1350" aria-label="인스타 카드 이미지 미리보기"></canvas>
+          </div>
+          <button type="button" class="wide-btn" id="downloadCard">카드 이미지 저장 (PNG)</button>
+          <div class="readout readout--body" id="outInsta"></div>
+        </div>
+
+        <div class="panel" id="panel-threads" role="tabpanel" hidden>
+          <div class="panel__bar">
+            <span class="panel__label">스레드 <span class="panel__meta" id="threadsCount"></span></span>
+            <div class="panel__acts">
+              <button type="button" class="copy-btn copy-btn--main" data-copy="threads">글 복사</button>
+            </div>
+          </div>
+          <div class="readout readout--body" id="outThreads"></div>
+        </div>
+
+        <div class="panel" id="panel-hub" role="tabpanel" hidden>
+          <div class="panel__bar">
+            <span class="panel__label">번호허브 등록</span>
+            <div class="panel__acts">
+              <button type="button" class="copy-btn" data-copy="json">JSON 복사</button>
+            </div>
+          </div>
+
+          <pre class="readout readout--code" id="outJson"></pre>
+
+          <div class="commit">
+            <div class="commit__head">
+              <h3>한 번에 반영</h3>
+              <span class="commit__state" id="patState">토큰 없음</span>
+            </div>
+            <details class="pat" id="patDetails">
+              <summary>GitHub 토큰 넣기 <span>(처음 한 번만)</span></summary>
+              <div class="pat__body">
+                <ol>
+                  <li>github.com/settings/personal-access-tokens/new 열기</li>
+                  <li>Repository access → <b>liwuforseason-lab/yogin-link</b> 선택</li>
+                  <li>Permissions → Contents: <b>Read and write</b></li>
+                  <li>만든 토큰( github_pat_… )을 아래에 붙여넣기</li>
+                </ol>
+                <input id="patInput" class="input" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
+                <div class="pat__row">
+                  <button type="button" class="wide-btn" id="patSave">토큰 저장</button>
+                  <button type="button" class="tiny-btn" id="patClear">지우기</button>
+                </div>
+                <p class="hint">토큰은 이 폰의 브라우저에만 저장돼요. 사이트에는 올라가지 않아요.</p>
+              </div>
+            </details>
+            <button type="button" class="wide-btn wide-btn--rose" id="commitBtn">번호허브에 바로 올리기</button>
+            <ul class="steps" id="commitSteps"></ul>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="actionbar" id="actionbar">
+      <button type="button" class="primary-btn" id="genBtn">원클릭 생성</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="historySheet" hidden>
+    <div class="sheet__backdrop" data-close="1"></div>
+    <div class="sheet__panel">
+      <div class="sheet__grab"></div>
+      <div class="sheet__head">
+        <h2>최근 만든 핫딜</h2>
+        <button type="button" class="tiny-btn" id="historyClose">닫기</button>
+      </div>
+      <div class="history" id="historyList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="texts.js?v=1"></script>
+  <script src="card.js?v=1"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
