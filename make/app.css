@@ -858,3 +858,6 @@ body {
 .keys__note { margin: 10px 0 0; font-size: 12.5px; font-weight: 700; color: var(--rose-deep); min-height: 18px; }
 
 .hint.is-warn { color: #c0453f; font-weight: 700; }
+
+/* hidden 속성이 display 규칙에 덮이지 않게 */
+[hidden] { display: none !important; }
