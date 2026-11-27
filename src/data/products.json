@@ -3,7 +3,7 @@
     "name": "요긴상회",
     "handle": "@zipora_find",
     "tagline": "생활꿀템 번호 검색",
-    "updated": "2026-11-26"
+    "updated": "2026-11-27"
   },
   "products": [
     {
@@ -123,6 +123,31 @@
       "image": "assets/img/neoflam-dragon-3set.jpg",
       "link": "https://link.coupang.com/a/iZoO4jlCnY",
       "note": "정가 60,000원 → 30,790원 (48%, 와우 5,000원 쿠폰 적용가) · 쿠폰 미적용 35,790원(40%) · 로켓배송 · 상품평 337개"
+    },
+    {
+      "no": "006",
+      "title": "해피데이 포켓형 핫팩 100g, 30개",
+      "short": "포켓형 핫팩 30개",
+      "point": "국내 제조 100g 30개, 1개당 315원 · 최대 14시간 지속 · 상품평 8.6만",
+      "price": 9460,
+      "originalPrice": 21000,
+      "discount": 54,
+      "badge": "겨울 필수템",
+      "keywords": [
+        "핫팩",
+        "손난로",
+        "포켓형핫팩",
+        "해피데이",
+        "대용량핫팩",
+        "겨울용품",
+        "방한용품",
+        "군인핫팩",
+        "낚시",
+        "캠핑"
+      ],
+      "image": "assets/img/happydays-hotpack-100g-30.jpg",
+      "link": "https://link.coupang.com/a/i0vy8CjCDs",
+      "note": "정가 21,000원 → 9,460원 (54%, 쿠팡 와우할인가) · 1개당 315원 · 로켓배송 오늘 도착 · 상품평 86,800여 개"
     }
   ]
 }
