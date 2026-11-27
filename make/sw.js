@@ -1,6 +1,6 @@
 /* 요긴상회 · 핫딜 스튜디오 서비스워커
    앱 껍데기는 캐시해서 오프라인에서도 열리고, 상품 번호는 항상 새로 받아옵니다. */
-var CACHE = "yg-studio-v2";
+var CACHE = "yg-studio-v3";
 var SHELL = [
   "./",
   "./index.html",
@@ -41,7 +41,7 @@ self.addEventListener("fetch", function (e) {
 
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req).then(function (res) {
+      fetch(req, { cache: "no-store" }).then(function (res) {
         var copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put(req, copy); });
         return res;
