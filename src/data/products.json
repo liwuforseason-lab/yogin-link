@@ -3,7 +3,7 @@
     "name": "요긴상회",
     "handle": "@zipora_find",
     "tagline": "생활꿀템 번호 검색",
-    "updated": "2026-11-27"
+    "updated": "2026-11-28"
   },
   "products": [
     {
@@ -195,6 +195,30 @@
       "image": "assets/img/blueforce-simple-sweatshirt-1plus1.jpg",
       "link": "https://link.coupang.com/a/i0GogfdfuC",
       "note": "정가 72,000원 → 34,060원 (52%, 쿠팡 와우할인가) · 장당 17,030원 · 무료배송·무료반품 · 상품평 3,124개"
+    },
+    {
+      "no": "009",
+      "title": "탐사 파워워시 액체 세탁세제 14L",
+      "short": "파워워시 세탁세제 14L",
+      "point": "14L 한 통에 12,990원, 100ml당 93원 · 일반·드럼 겸용 대용량 세제",
+      "price": 12990,
+      "originalPrice": 31300,
+      "discount": 58,
+      "badge": "대용량 14L",
+      "keywords": [
+        "세탁세제",
+        "액체세제",
+        "대용량세제",
+        "14L",
+        "탐사",
+        "파워워시",
+        "일반드럼겸용",
+        "생활용품",
+        "쿠팡PB"
+      ],
+      "image": "assets/img/tamsa-powerwash-14l.jpg",
+      "link": "https://link.coupang.com/a/i2aNVqGoGO",
+      "note": "정가 31,300원 → 12,990원 (58%) · 100ml당 93원 · 일반 5kg 기준 1회 약 42원 · 로켓배송 내일 도착 · 상품평 269,814개"
     }
   ]
 }
